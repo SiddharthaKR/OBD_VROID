@@ -22,12 +22,15 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import com.fr3ts0n.ecu.prot.obd.ObdProt;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.fr3ts0n.androbd.plugin.mgr.PluginManager;
 import com.fr3ts0n.ecu.Conversion;
@@ -63,7 +66,7 @@ class ObdItemAdapter extends ArrayAdapter<Object>
      */
     static boolean allowDataUpdates = true;
     private final transient SharedPreferences prefs;
-
+    public static ArrayList<Object> fullDataList; // Add this member variable for the full data list
 
     public ObdItemAdapter(Context context, int resource, PvList pvs)
     {
@@ -82,6 +85,7 @@ class ObdItemAdapter extends ArrayAdapter<Object>
     @SuppressWarnings("unchecked")
     public synchronized void setPvList(PvList pvs)
     {
+//        Log.d("setPvList", "setPvList: "+pvs);
         this.pvs = pvs;
         // get set to be displayed (filtered with preferences */
         Collection<Object> filtered = getPreferredItems(pvs);
@@ -92,6 +96,17 @@ class ObdItemAdapter extends ArrayAdapter<Object>
         clear();
         // add all elements
         addAll(pidPvs);
+        // Update the full data list
+        fullDataList = new ArrayList<>(Arrays.asList(pidPvs));
+    }
+
+    /**
+     * Get the full data source
+     *
+     * @return ArrayList containing the full data source
+     */
+    public static ArrayList<Object> getFullDataList() {
+        return fullDataList;
     }
 
     @SuppressWarnings("rawtypes")
@@ -168,7 +183,7 @@ class ObdItemAdapter extends ArrayAdapter<Object>
     {
         // get data PV
         EcuDataPv currPv = (EcuDataPv) getItem(position);
-
+        Log.d("adapter", "getView: "+currPv);
         if (convertView == null)
         {
             convertView = mInflater.inflate(R.layout.obd_item, parent, false);
@@ -229,6 +244,8 @@ class ObdItemAdapter extends ArrayAdapter<Object>
         {
             fmtText = String.valueOf(colVal);
         }
+//        Toast.makeText(getContext(), "hiiii", Toast.LENGTH_SHORT).show();
+        Log.d("OBD_ITEM", "Key: " + tvDescr.getText() + ", Value: " +fmtText+ currPv.getUnits());
         // set value
         tvValue.setText(fmtText);
         tvUnits.setText(currPv.getUnits());

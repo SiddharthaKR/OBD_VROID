@@ -20,4 +20,9 @@
         android:icon="@drawable/ic_filter"
         android:showAsAction="always"
         android:title="@string/filter"/>
+    <item
+        android:id="@+id/filter_selectAll"
+        android:icon="@drawable/ic_select_all"
+        android:showAsAction="always"
+        android:title="@string/filter"/>
 </menu>

@@ -40,6 +40,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.Menu;
@@ -72,9 +73,11 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Timer;
@@ -285,6 +288,9 @@ public class MainActivity extends PluginManager
      * current operating mode
      */
     private MODE mode = MODE.OFFLINE;
+
+    // Maintain a reference to your data list outside of the adapter
+    List<EcuDataPv> dataList = new ArrayList<>(); // Initialize with your data
     /**
      * Handle message requests
      */
@@ -297,7 +303,6 @@ public class MainActivity extends PluginManager
             try
             {
                 PropertyChangeEvent evt;
-
                 // log trace message for received handler notification event
                 log.log(Level.FINEST, String.format("Handler notification: %s", msg.toString()));
 
@@ -330,6 +335,7 @@ public class MainActivity extends PluginManager
                         // set listeners for data structure changes
                         setDataListeners();
                         // set adapters data source to loaded list instances
+                        Log.d("onCreate", "msgFileRead: "+ObdProt.PidPvs);
                         mPidAdapter.setPvList(ObdProt.PidPvs);
                         mVidAdapter.setPvList(ObdProt.VidPvs);
                         mTidAdapter.setPvList(ObdProt.VidPvs);
@@ -369,6 +375,7 @@ public class MainActivity extends PluginManager
                                     if (event.getSource() == ObdProt.PidPvs)
                                     {
                                         // append plugin measurements to data list
+                                        Log.d("onCreate", "dataItemsChanged: "+ObdProt.PidPvs);
                                         currDataAdapter.addAll(mPluginPvs.values());
                                         // Check if last data selection shall be restored
                                         checkToRestoreLastDataSelection();
@@ -543,13 +550,14 @@ public class MainActivity extends PluginManager
         }
 
         // Set up all data adapters
+        Log.d("onCreate", "onCreate: "+ObdProt.PidPvs);
         mPidAdapter = new ObdItemAdapter(this, R.layout.obd_item, ObdProt.PidPvs);
         mVidAdapter = new VidItemAdapter(this, R.layout.obd_item, ObdProt.VidPvs);
         mTidAdapter = new TidItemAdapter(this, R.layout.obd_item, ObdProt.VidPvs);
         mDfcAdapter = new DfcItemAdapter(this, R.layout.obd_item, ObdProt.tCodes);
         mPluginDataAdapter = new PluginDataAdapter(this, R.layout.obd_item, mPluginPvs);
         currDataAdapter = mPidAdapter;
-
+        Log.d("onCreate2", "onCreate: "+ObdProt.PidPvs);
         // get list view
         mListView = getWindow().getLayoutInflater().inflate(R.layout.obd_list, null);
 
@@ -701,6 +709,8 @@ public class MainActivity extends PluginManager
 
         super.onDestroy();
     }
+
+
 
     @Override
     public void setContentView(int layoutResID)
@@ -893,6 +903,9 @@ public class MainActivity extends PluginManager
 
             case R.id.filter_selected:
                 setDataViewMode(DATA_VIEW_MODE.FILTERED);
+                return true;
+            case R.id.filter_selectAll:
+                selectAllItems();
                 return true;
         }
         return false;
@@ -1578,6 +1591,7 @@ public class MainActivity extends PluginManager
     private void setDataListeners()
     {
         // add pv change listeners to trigger model updates
+        Log.d("onCreate", "setDataListeners: "+ObdProt.PidPvs);
         ObdProt.PidPvs.addPvChangeListener(this,
                 PvChangeEvent.PV_ADDED
                         | PvChangeEvent.PV_CLEARED
@@ -1994,6 +2008,7 @@ public class MainActivity extends PluginManager
                 getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
                 // no break here
             case ObdProt.OBD_SVC_FREEZEFRAME:
+                Log.d("onCreate", "setObdService: "+ObdProt.PidPvs);
                 currDataAdapter = mPidAdapter;
                 break;
 
@@ -2044,8 +2059,11 @@ public class MainActivity extends PluginManager
             }
             currDataAdapter.filterPositions(selectedPositions);
 
-            if (currDataAdapter == mPidAdapter)
+            if (currDataAdapter == mPidAdapter){
+                Log.d("onCreate", "setFiltered: "+ObdProt.PidPvs);
                 setFixedPids(selPids);
+            }
+
         } else
         {
             if (currDataAdapter == mPidAdapter)
@@ -2054,6 +2072,8 @@ public class MainActivity extends PluginManager
             /* Return to original PV list */
             if (currDataAdapter == mPidAdapter)
             {
+
+                Log.d("onCreate", "setFiltered2: "+ObdProt.PidPvs);
                 currDataAdapter.setPvList(ObdProt.PidPvs);
                 // append plugin measurements to data list
                 currDataAdapter.addAll(mPluginPvs.values());
@@ -2132,6 +2152,15 @@ public class MainActivity extends PluginManager
 
         // return validity of positions
         return positionsValid;
+    }
+
+    private void selectAllItems() {
+        ListView listView = getListView();  // Get a reference to the ListView
+        Log.d("check","selected all");
+        for (int i = 0; i < listView.getCount(); i++) {
+            listView.setItemChecked(i, true);  // Set each item to checked
+        }
+
     }
 
     /**

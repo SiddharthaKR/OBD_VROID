@@ -39,7 +39,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Vector;
-
 /**
  * OBD communication protocol layer
  *
@@ -440,6 +439,8 @@ public class ObdProt extends ProtoHeader
             }
         }
         pvList.putAll(newList, PvChangeEvent.PV_ADDED, false);
+        log.info("ye hai"+pvList);
+        log.info("ye hai"+PidPvs);
     }
 
     /**

@@ -25,8 +25,10 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 
+import com.fr3ts0n.ecu.EcuDataPv;
 import com.fr3ts0n.ecu.prot.obd.ElmProt;
 import com.fr3ts0n.ecu.prot.obd.ObdProt;
 import com.fr3ts0n.pvs.PvList;
@@ -37,6 +39,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -116,12 +119,56 @@ class FileHelper
 			public void run()
 			{
 				Looper.prepare();
-				saveData(mPath, mFileName);
+				logData(mPath, mFileName); // Call a method to log the data
+//				saveData(mPath, mFileName);
 				progress.dismiss();
 				Looper.loop();
 			}
 		};
 		saveTask.start();
+	}
+	/**
+	 * Log all data
+	 */
+	private synchronized void logData(String mPath, String mFileName) {
+		File outFile;
+
+		// ensure the path is created
+		//noinspection ResultOfMethodCallIgnored
+		new File(mPath).mkdirs();
+		outFile = new File(mFileName);
+
+		// Prevent data updates for logging period
+		ObdItemAdapter.allowDataUpdates = false;
+		try
+		{
+			ArrayList<Object> array= ObdItemAdapter.getFullDataList();
+			Log.d("saveData", "size: "+array.size());
+//			for (Object pidPv : array) {
+//				EcuDataPv currPv = (EcuDataPv) pidPv;
+//
+//				Log.d("saveData", "logData: "+(currPv.get(EcuDataPv.FID_DESCRIPT)));
+//				Log.d("saveData", "logData: "+ currPv.get(EcuDataPv.FID_VALUE)+currPv.getUnits());
+//			}
+			outFile.createNewFile();
+			FileOutputStream fStr = new FileOutputStream(outFile);
+			ObjectOutputStream oStr = new ObjectOutputStream(fStr);
+			oStr.writeObject(array);
+			oStr.close();
+			fStr.close();
+			@SuppressLint("DefaultLocale")
+			String msg = String.format("%s %d Bytes to %s",
+					context.getString(R.string.saved),
+					outFile.length(),
+					mPath);
+			log.info(msg);
+			Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+		} catch (Exception e)
+		{
+			Toast.makeText(context, e.toString(), Toast.LENGTH_SHORT).show();
+			e.printStackTrace();
+		}
+		ObdItemAdapter.allowDataUpdates = true;
 	}
 
 	/**
@@ -145,6 +192,14 @@ class FileHelper
 			outFile.createNewFile();
 			FileOutputStream fStr = new FileOutputStream(outFile);
 			ObjectOutputStream oStr = new ObjectOutputStream(fStr);
+			// Log the data you are writing
+			Log.d("SaveData", "start hua bhai");
+			Log.d("SaveData", "Writing Service: " + elm.getService());
+			Log.d("SaveData", "Writing PidPvs: " + ObdProt.PidPvs);
+			Log.d("SaveData", "Writing VidPvs: " + ObdProt.VidPvs);
+			Log.d("SaveData", "Writing tCodes: " + ObdProt.tCodes);
+			Log.d("SaveData", "Writing PluginPvs: " + MainActivity.mPluginPvs);
+			//
 			oStr.writeInt(elm.getService());
 			oStr.writeObject(ObdProt.PidPvs);
 			oStr.writeObject(ObdProt.VidPvs);
