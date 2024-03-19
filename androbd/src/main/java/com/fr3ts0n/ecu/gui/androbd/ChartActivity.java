@@ -356,8 +356,23 @@ public class ChartActivity extends Activity
 			if (currSeries == null) continue;
 			// add initial measurement to series data to ensure
 			// at least one measurement is available
-			if (currSeries.getItemCount() < 1)
-				currSeries.add(startTime, Float.parseFloat(currPv.get(EcuDataPv.FID_VALUE).toString()));
+
+			///////////// Siddhartha Changes
+			if (currSeries.getItemCount() < 1) {
+				try {
+					// Parse the value as a float
+					float value = Float.parseFloat(currPv.get(EcuDataPv.FID_VALUE).toString());
+					currSeries.add(startTime, value);
+				} catch (NumberFormatException e) {
+					// Handle the case where the value is "n/a"
+					// Here, you might want to assign a default value or skip adding to series
+					// For example, let's assign a default value of 0
+					currSeries.add(startTime, 0);
+				}
+			}
+
+//	Siddhartha Changes		if (currSeries.getItemCount() < 1)
+//				currSeries.add(startTime, Float.parseFloat(currPv.get(EcuDataPv.FID_VALUE).toString()));
 
 			// set scale to display series
 			currSeries.setScaleNumber(i);

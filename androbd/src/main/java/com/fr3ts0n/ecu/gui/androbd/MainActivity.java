@@ -2055,12 +2055,10 @@ public class MainActivity extends PluginManager
             for (int pos : selectedPositions)
             {
                 EcuDataPv pv = (EcuDataPv) currDataAdapter.getItem(pos);
-                selPids.add(pv != null ? pv.getAsInt(EcuDataPv.FID_PID) : 0);
+                    selPids.add(pv != null ? pv.getAsInt(EcuDataPv.FID_PID) : 0);
             }
             currDataAdapter.filterPositions(selectedPositions);
-
             if (currDataAdapter == mPidAdapter){
-                Log.d("onCreate", "setFiltered: "+ObdProt.PidPvs);
                 setFixedPids(selPids);
             }
 
