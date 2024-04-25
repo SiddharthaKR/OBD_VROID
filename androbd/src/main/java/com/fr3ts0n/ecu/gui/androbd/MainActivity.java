@@ -214,6 +214,7 @@ public class MainActivity extends PluginManager
     private static DfcItemAdapter mDfcAdapter;
     private static PluginDataAdapter mPluginDataAdapter;
     private static ObdItemAdapter currDataAdapter;
+    private SaveToDatabase saveToDatabaseTask;
     /**
      * initial state of bluetooth adapter
      */
@@ -550,14 +551,12 @@ public class MainActivity extends PluginManager
         }
 
         // Set up all data adapters
-        Log.d("onCreate", "onCreate: "+ObdProt.PidPvs);
         mPidAdapter = new ObdItemAdapter(this, R.layout.obd_item, ObdProt.PidPvs);
         mVidAdapter = new VidItemAdapter(this, R.layout.obd_item, ObdProt.VidPvs);
         mTidAdapter = new TidItemAdapter(this, R.layout.obd_item, ObdProt.VidPvs);
         mDfcAdapter = new DfcItemAdapter(this, R.layout.obd_item, ObdProt.tCodes);
         mPluginDataAdapter = new PluginDataAdapter(this, R.layout.obd_item, mPluginPvs);
         currDataAdapter = mPidAdapter;
-        Log.d("onCreate2", "onCreate: "+ObdProt.PidPvs);
         // get list view
         mListView = getWindow().getLayoutInflater().inflate(R.layout.obd_list, null);
 
@@ -858,6 +857,16 @@ public class MainActivity extends PluginManager
             case R.id.service_clearcodes:
                 clearObdFaultCodes();
                 setObdService(ObdProt.OBD_SVC_READ_CODES, item.getTitle());
+                return true;
+            case R.id.service_saveToDatabase:
+
+                DatabaseHelper dbHelper = DatabaseHelper.getInstance(this);
+                if (saveToDatabaseTask == null) {
+                    EcuDataPv EcuDataPv = new EcuDataPv();
+                    saveToDatabaseTask = new SaveToDatabase(this, dbHelper,EcuDataPv /* your data object */);
+                }
+                saveToDatabaseTask.execute();
+//                setObdService(ObdProt.OBD_SVC_READ_CODES, item.getTitle());
                 return true;
         }
 
@@ -1591,7 +1600,6 @@ public class MainActivity extends PluginManager
     private void setDataListeners()
     {
         // add pv change listeners to trigger model updates
-        Log.d("onCreate", "setDataListeners: "+ObdProt.PidPvs);
         ObdProt.PidPvs.addPvChangeListener(this,
                 PvChangeEvent.PV_ADDED
                         | PvChangeEvent.PV_CLEARED

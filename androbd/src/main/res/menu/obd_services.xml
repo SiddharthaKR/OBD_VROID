@@ -29,4 +29,8 @@
         android:id="@+id/service_clearcodes"
         android:title="@string/obd_clearcodes"
         android:icon="@android:drawable/ic_menu_delete"/>
+    <item
+        android:id="@+id/service_saveToDatabase"
+        android:title="Save Trip"
+        android:icon="@android:drawable/ic_menu_delete"/>
 </menu>

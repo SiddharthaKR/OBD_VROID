@@ -215,7 +215,7 @@ class ObdItemAdapter extends ArrayAdapter<Object>
                 && ((Conversion[]) cnvObj)[EcuDataItem.cnvSystem] != null
             )
             {
-                // format throuch assigned conversion
+                // format through assigned conversion
                 Conversion cnv;
                 cnv = ((Conversion[]) cnvObj)[EcuDataItem.cnvSystem];
                 // set formatted text
@@ -245,11 +245,17 @@ class ObdItemAdapter extends ArrayAdapter<Object>
             fmtText = String.valueOf(colVal);
         }
 //        Toast.makeText(getContext(), "hiiii", Toast.LENGTH_SHORT).show();
-        Log.d("OBD_ITEM", "Key: " + tvDescr.getText() + ", Value: " +fmtText+ currPv.getUnits());
+//        Log.d("OBD_ITEM", "Key: " + tvDescr.getText() + ", Value: " +fmtText+ currPv.getUnits());
         // set value
+        String field = (String) tvDescr.getText();
+        String value = (String) (fmtText);
+        String unit = (String) currPv.getUnits();
+//        DatabaseHelper databaseHelper = new DatabaseHelper(getContext());
+//        databaseHelper.insertEcuDataPv(getContext(),field,value);
+//        Log.d("BackgroundTask", "Adapter Data:"+field+":"+value+unit);
+//        databaseHelper.insertOBDData("12:00",field,value,unit);
         tvValue.setText(fmtText);
         tvUnits.setText(currPv.getUnits());
-
         return convertView;
     }
 

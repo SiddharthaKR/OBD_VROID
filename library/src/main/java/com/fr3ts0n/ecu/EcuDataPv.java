@@ -27,6 +27,7 @@ import com.fr3ts0n.pvs.IndexedProcessVar;
  */
 public class EcuDataPv extends IndexedProcessVar
 {
+	public static final int FID_TIME = 6907;
 	/** UID for serialisation */
 	private static final long serialVersionUID = -7787217159439147214L;
 

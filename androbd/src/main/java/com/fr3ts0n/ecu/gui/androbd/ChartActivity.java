@@ -27,6 +27,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
@@ -44,6 +45,10 @@ import org.achartengine.renderer.BasicStroke;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -62,6 +67,8 @@ public class ChartActivity extends Activity
 	 * minimum time between screen updates
 	 */
 	public static final long MIN_UPDATE_TIME = 1000;
+
+	private final Map<XYSeries, Integer> seriesMap = new HashMap<>();
 
 	/**
 	 * For passing the index number of the <code>Sensor</code> in its
@@ -86,6 +93,8 @@ public class ChartActivity extends Activity
 	 * The displaying component
 	 */
 	private GraphicalView chartView;
+
+	private DatabaseHelper databaseHelper;
 
 	/**
 	 * Dataset of the graphing component
@@ -166,6 +175,7 @@ public class ChartActivity extends Activity
 
 		/* get PIDs to be shown */
 		int[] positions = getIntent().getIntArrayExtra(POSITIONS);
+		databaseHelper = new DatabaseHelper(getApplicationContext());
 
 		// set up overall chart properties
 		sensorData = new XYMultipleSeriesDataset();
@@ -187,6 +197,8 @@ public class ChartActivity extends Activity
 		setContentView(chartView);
 		// limit selected PIDs to selection
 		MainActivity.setFixedPids(pidNumbers);
+
+//		insertDataToDatabase(positions, databaseHelper);
 		// if auto hiding selected ...
 		if(MainActivity.prefs.getBoolean(MainActivity.PREF_AUTOHIDE,false))
 		{
@@ -293,6 +305,9 @@ public class ChartActivity extends Activity
 			/* forward message to update the view */
 			Message msg = mHandler.obtainMessage(MainActivity.MESSAGE_UPDATE_VIEW);
 			mHandler.sendMessage(msg);
+			// Save data to database
+			saveDataToDatabase();
+
 		}
 	};
 
@@ -347,7 +362,6 @@ public class ChartActivity extends Activity
 			int pid = currPv.getAsInt(EcuDataPv.FID_PID);
 			// add PID to unique list of PIDs
 			pidNumbers.add(pid);
-
 			// Get display color ...
 			int pidColor = ColorAdapter.getItemColor(currPv);
 
@@ -356,7 +370,7 @@ public class ChartActivity extends Activity
 			if (currSeries == null) continue;
 			// add initial measurement to series data to ensure
 			// at least one measurement is available
-
+			seriesMap.put(currSeries, position);
 			///////////// Siddhartha Changes
 			if (currSeries.getItemCount() < 1) {
 				try {
@@ -392,4 +406,42 @@ public class ChartActivity extends Activity
 			i++;
 		}
 	}
-}
+	private void saveDataToDatabase() {
+		long currentTime = System.currentTimeMillis();
+
+		// Loop through each series in the dataset
+		for (XYSeries series : sensorData.getSeries()) {
+			int dataCount = series.getItemCount();
+			if (dataCount > 0) {
+				// Get the latest data point (time and value)
+				double latestTime = series.getX(dataCount - 1);
+				double latestValue = series.getY(dataCount - 1);
+
+				// Approach 1: Maintain a Map (Recommended)
+				// (Assuming you implemented the map approach during chart setup)
+				int index = seriesMap.get(series); // Get index from map
+
+				// Approach 2: Loop through Adapter (if applicable)
+				// int index = loopCounter; // Assuming loop counter aligns with series order
+
+				EcuDataPv currPv = (EcuDataPv) mAdapter.getItem(index);
+				// Convert milliseconds to human-readable format with date
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				String formattedTime = sdf.format(new Date((long) latestTime));
+				if (currPv != null) { // Check if data point exists
+					int pid = currPv.getAsInt(EcuDataPv.FID_PID);
+					String fieldName = String.valueOf(currPv.get(EcuDataPv.FID_DESCRIPT));
+					String unit = (String) currPv.getUnits();
+
+					// Insert data into database with timestamp
+					Log.d("BackgroundTask", "insertDataToDatabase: "+" startTime:"+String.valueOf(currentTime)+" field:"+fieldName+" value:"+String.valueOf(latestValue)+" units:"+unit);
+					databaseHelper.insertOBDData(formattedTime, fieldName, String.valueOf(latestValue), unit,String.valueOf(currentTime));
+				} else {
+					// Handle the case where data point is missing for a series (optional)
+					Log.w("ChartActivity", "Missing data point for series index: " + index);
+				}
+			}
+		}
+	}
+
+};
