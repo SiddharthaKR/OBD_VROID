@@ -4,13 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Saved Trips"
-        android:background="#666"
-        android:textColor="#fff"
-        />
     <ListView android:id="@+id/saved_trips"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

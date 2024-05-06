@@ -3,6 +3,7 @@ package com.fr3ts0n.ecu.gui.androbd;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -11,6 +12,9 @@ import android.widget.Toast;
 import com.fr3ts0n.ecu.Conversion;
 import com.fr3ts0n.ecu.EcuDataItem;
 import com.fr3ts0n.ecu.EcuDataPv;
+
+import java.util.ArrayList;
+import java.util.List;
 
 //import androidx.annotation.Nullable;
 
@@ -111,6 +115,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 //            Toast.makeText(context, "Data inserted successfully", Toast.LENGTH_SHORT).show();
         }
         db.close();
+    }
+
+    public List<String> getTableNames() {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'android_metadata' AND name NOT LIKE 'sqlite_sequence'", null);
+        List<String> tableNames = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            tableNames.add(cursor.getString(0));
+        }
+        cursor.close();
+        Log.d("kappa", "getTableNames: "+tableNames);
+        return tableNames;
     }
 
 

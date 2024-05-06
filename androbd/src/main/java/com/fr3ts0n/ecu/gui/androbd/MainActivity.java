@@ -51,6 +51,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -816,6 +817,10 @@ public class MainActivity extends PluginManager
                 Intent settingsIntent = new Intent(this, SettingsActivity.class);
                 startActivityForResult(settingsIntent, REQUEST_SETTINGS);
                 return true;
+            case R.id.saved_trips:
+                // Open new activity to show saved trips (assuming SavedTripsActivity)
+                Intent intent = new Intent(this, SavedTripsActivity.class);
+                startActivity(intent);
 
             case R.id.plugin_manager:
                 setManagerView();
@@ -859,13 +864,12 @@ public class MainActivity extends PluginManager
                 setObdService(ObdProt.OBD_SVC_READ_CODES, item.getTitle());
                 return true;
             case R.id.service_saveToDatabase:
-
-                DatabaseHelper dbHelper = DatabaseHelper.getInstance(this);
-                if (saveToDatabaseTask == null) {
-                    EcuDataPv EcuDataPv = new EcuDataPv();
-                    saveToDatabaseTask = new SaveToDatabase(this, dbHelper,EcuDataPv /* your data object */);
-                }
-                saveToDatabaseTask.execute();
+//                DatabaseHelper dbHelper = DatabaseHelper.getInstance(this);
+//                if (saveToDatabaseTask == null) {
+//                    EcuDataPv EcuDataPv = new EcuDataPv();
+//                    saveToDatabaseTask = new SaveToDatabase(this, dbHelper,EcuDataPv /* your data object */);
+//                }
+//                saveToDatabaseTask.execute();
 //                setObdService(ObdProt.OBD_SVC_READ_CODES, item.getTitle());
                 return true;
         }
