@@ -84,7 +84,7 @@ public class SavedTripsActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     String tableName = tableNames.get(position);
-                    exportTableToCSV(tableName); // Call method to export data
+                    dbHelper.exportTableToCSV(context, tableName); // Call method to export data
                 }
             });
 
@@ -94,13 +94,8 @@ public class SavedTripsActivity extends Activity {
 
     // Method to export table data to CSV (implementation needed)
     private void exportTableToCSV(String tableName) {
-        // Implement logic to export data from the specified table to a CSV file
-        // You'll need database helper methods to retrieve data and write it to a CSV file.
-        // Consider using libraries like "opencsv" for easier CSV generation.
-
-        // Example (incomplete):
-        // List<String[]> data = dbHelper.getTableData(tableName);
-        // // ... write data to CSV file
+        // Call the exportTableToCSV method of dbHelper
+        dbHelper.exportTableToCSV(this, tableName);
     }
 }
 
