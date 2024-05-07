@@ -3,14 +3,23 @@ package com.fr3ts0n.ecu.gui.androbd;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.fr3ts0n.ecu.Conversion;
 import com.fr3ts0n.ecu.EcuDataItem;
 import com.fr3ts0n.ecu.EcuDataPv;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 //import androidx.annotation.Nullable;
 
@@ -113,38 +122,64 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    public List<String> getTableNames() {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'android_metadata' AND name NOT LIKE 'sqlite_sequence'", null);
+        List<String> tableNames = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            tableNames.add(cursor.getString(0));
+        }
+        cursor.close();
+        Log.d("kappa", "getTableNames: "+tableNames);
+        return tableNames;
+    }
 
-//    public long insertEcuDataPv(Context context,String field, String value) {
-//        SQLiteDatabase db = getWritableDatabase();
-//        ContentValues values = new ContentValues();
-//        values.put(COLUMN_PID, field);
-//        Log.d("BackgroundTask","huaa");
-//        values.put(COLUMN_TIMESTAMP, String.valueOf(dataPv.get(EcuDataPv.FID_TIME))); // Consider data type
-//        values.put(COLUMN_PID, (String) dataPv.get(EcuDataPv.FID_MNEMONIC));
-//
-//        // Format value based on conversion rules (similar to previous implementation)
-//        Object colVal = dataPv.get(EcuDataPv.FID_VALUE);
-//        Object cnvObj = dataPv.get(EcuDataPv.FID_CNVID);
-//        if (cnvObj instanceof Conversion[]) {
-//            Conversion cnv = ((Conversion[]) cnvObj)[EcuDataItem.cnvSystem];
-//            values.put(COLUMN_VALUE, cnv.physToPhysFmtString((Number) colVal,
-//                    (String) dataPv.get(EcuDataPv.FID_FORMAT)));
-//        } else {
-//            values.put(COLUMN_VALUE, String.valueOf(colVal));
-//        }
-//
-//        values.put(COLUMN_UNITS, (String) dataPv.get(EcuDataPv.FID_UNITS));
-//        Log.d("database check",field+" "+value);
-////        // Insert the data into the table
-//        long newRowId = db.insert(TABLE_OBD_ITEMS, null, values);
-//
-//        if (newRowId == -1) {
-//            Toast.makeText(context, "Failed to insert data", Toast.LENGTH_SHORT).show();
-//        } else {
-//            Toast.makeText(context, "Data inserted successfully", Toast.LENGTH_SHORT).show();
-//        }
-//
-//        db.close();
-//        return newRowId;
-//    }
+    public void exportTableToCSV(Context context, String tableName) {
+        try {
+            SQLiteDatabase db = this.getReadableDatabase();
+            Cursor cursor = db.rawQuery("SELECT * FROM " + tableName, null);
+
+            int columnCount = cursor.getColumnCount();
+            int rowCount = cursor.getCount();
+
+            if (rowCount == 0) {
+                Toast.makeText(context, "No data available to export", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Create directory if not exists
+            File directory = new File(Environment.getExternalStorageDirectory() + "/your_directory");
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            // Create Excel file
+            String excelFilePath = directory.getPath() + "/" + tableName + ".xls";
+            File excelFile = new File(excelFilePath);
+            FileOutputStream fos = new FileOutputStream(excelFile);
+            StringBuilder stringBuilder = new StringBuilder();
+
+            // Write column names to Excel file
+            for (int i = 0; i < columnCount; i++) {
+                stringBuilder.append(cursor.getColumnName(i)).append("\t");
+            }
+            stringBuilder.append("\n");
+
+            // Write data to Excel file
+            while (cursor.moveToNext()) {
+                for (int i = 0; i < columnCount; i++) {
+                    stringBuilder.append(cursor.getString(i)).append("\t");
+                }
+                stringBuilder.append("\n");
+            }
+
+            fos.write(stringBuilder.toString().getBytes());
+            fos.close();
+            Toast.makeText(context, "Data exported to " + excelFilePath, Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Log.e("DatabaseHelper", "Error exporting data to Excel: " + e.getMessage());
+            Toast.makeText(context, "Error exporting data to Excel", Toast.LENGTH_SHORT).show();
+        }
+
+    }
 }

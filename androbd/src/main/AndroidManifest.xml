@@ -67,6 +67,10 @@
             android:configChanges="touchscreen|orientation|screenSize"
             android:label="@string/settings" />
         <activity
+            android:name="SavedTripsActivity"
+            android:configChanges="touchscreen|orientation|screenSize"
+            android:label="SavedTrips" />
+        <activity
             android:name=".PidCustomization"
             android:label="@string/customize_display"
             android:configChanges="touchscreen|orientation|screenSize" />
